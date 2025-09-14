@@ -1,44 +1,29 @@
-# 2-lazy_paginate.py
-"""
-lazy_pagination(page_size): yields pages (list of rows).
-Includes paginate_users(page_size, offset) helper.
-Only one loop in lazy_pagination (while).
-"""
+#!/usr/bin/python3
+import seed  # import your DB connection functions from seed.py
 
-from seed import connect_to_prodev
 
 def paginate_users(page_size, offset):
     """
-    Fetch a page of rows from DB and return list of dict rows.
+    Fetch a single page of users from the database using LIMIT + OFFSET
     """
-    conn = connect_to_prodev()
-    try:
-        try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT user_id, name, email, age FROM user_data ORDER BY user_id LIMIT %s OFFSET %s", (page_size, offset))
-            rows = cursor.fetchall()
-            return rows
-        except Exception:
-            cur = conn.cursor()
-            cur.execute("SELECT user_id, name, email, age FROM user_data ORDER BY user_id LIMIT ? OFFSET ?", (page_size, offset))
-            fetched = cur.fetchall()
-            colnames = [d[0] for d in cur.description]
-            return [dict(zip(colnames, r)) for r in fetched]
-    finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+    connection = seed.connect_to_prodev()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(f"SELECT * FROM user_data LIMIT {page_size} OFFSET {offset}")
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return rows
 
 
-def lazy_pagination(page_size):
+def lazy_paginate(page_size):
     """
-    Generator that yields pages lazily. Single loop only.
+    Generator that lazily fetches users page by page.
+    Only fetches the next page when requested.
     """
     offset = 0
     while True:
-        page = paginate_users(page_size, offset)
-        if not page:
+        rows = paginate_users(page_size, offset)
+        if not rows:  # stop when no more rows
             break
-        yield page
+        yield rows
         offset += page_size
