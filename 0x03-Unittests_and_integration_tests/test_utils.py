@@ -9,17 +9,19 @@ Unit tests for utils functions:
 import unittest
 from unittest.mock import patch, Mock
 from typing import Any, Dict, Tuple
-from parameterized import parameterized  # type: ignore
+from parameterized import parameterized
 from utils import access_nested_map, get_json, memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
     """Unit tests for the access_nested_map function."""
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([
         ({"a": 1}, ("a",), 1),
         ({"a": {"b": 2}}, ("a",), {"b": 2}),
         ({"a": {"b": 2}}, ("a", "b"), 2),
+        ({"a": {"b": {"c": 3}}}, ("a", "b", "c"), 3),  # Deeper nesting
+        ({}, (), {}),  # Empty path with empty dict
     ])
     def test_access_nested_map(
         self,
@@ -30,9 +32,10 @@ class TestAccessNestedMap(unittest.TestCase):
         """Test that access_nested_map returns expected results."""
         self.assertEqual(access_nested_map(nested_map, path), expected)
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([
         ({}, ("a",)),
         ({"a": 1}, ("a", "b")),
+        ({"a": {"b": 2}}, ("a", "b", "c")),  # Deeper missing key
     ])
     def test_access_nested_map_exception(
         self,
@@ -49,9 +52,10 @@ class TestAccessNestedMap(unittest.TestCase):
 class TestGetJson(unittest.TestCase):
     """Unit tests for the get_json function."""
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
+        ("https://api.example.com/data", {"data": [1, 2, 3]}),
     ])
     def test_get_json(
         self,
@@ -62,7 +66,7 @@ class TestGetJson(unittest.TestCase):
         Test that get_json returns expected payload
         from mocked HTTP calls.
         """
-        mock_response: Mock = Mock()
+        mock_response = Mock()
         mock_response.json.return_value = test_payload
 
         with patch("utils.requests.get", return_value=mock_response) as mock_get:
@@ -73,6 +77,15 @@ class TestGetJson(unittest.TestCase):
 
             # Ensure the result is the expected payload
             self.assertEqual(result, test_payload)
+
+    def test_get_json_exception(self) -> None:
+        """Test that get_json propagates exceptions from requests.get."""
+        test_url = "http://invalid-url"
+        
+        with patch("utils.requests.get", side_effect=Exception("Connection error")) as mock_get:
+            with self.assertRaises(Exception):
+                get_json(test_url)
+            mock_get.assert_called_once_with(test_url)
 
 
 class TestMemoize(unittest.TestCase):
@@ -98,12 +111,13 @@ class TestMemoize(unittest.TestCase):
         ) as mock_method:
             obj = TestClass()
 
-            # Call twice
-            result1 = obj.a_property()
-            result2 = obj.a_property()
+            # Call multiple times
+            results = [obj.a_property() for _ in range(5)]
 
-            self.assertEqual(result1, 42)
-            self.assertEqual(result2, 42)
+            # All results should be the same
+            self.assertEqual(results, [42, 42, 42, 42, 42])
+            
+            # Method should only be called once due to memoization
             mock_method.assert_called_once()
 
 
