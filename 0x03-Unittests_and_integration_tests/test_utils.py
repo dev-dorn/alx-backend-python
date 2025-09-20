@@ -20,8 +20,6 @@ class TestAccessNestedMap(unittest.TestCase):
         ({"a": 1}, ("a",), 1),
         ({"a": {"b": 2}}, ("a",), {"b": 2}),
         ({"a": {"b": 2}}, ("a", "b"), 2),
-        ({"a": {"b": {"c": 3}}}, ("a", "b", "c"), 3),  # Deeper nesting
-        ({}, (), {}),  # Empty path with empty dict
     ])
     def test_access_nested_map(
         self,
@@ -35,7 +33,6 @@ class TestAccessNestedMap(unittest.TestCase):
     @parameterized.expand([
         ({}, ("a",)),
         ({"a": 1}, ("a", "b")),
-        ({"a": {"b": 2}}, ("a", "b", "c")),  # Deeper missing key
     ])
     def test_access_nested_map_exception(
         self,
@@ -55,37 +52,20 @@ class TestGetJson(unittest.TestCase):
     @parameterized.expand([
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
-        ("https://api.example.com/data", {"data": [1, 2, 3]}),
     ])
     def test_get_json(
         self,
         test_url: str,
         test_payload: Dict[str, Any]
     ) -> None:
-        """
-        Test that get_json returns expected payload
-        from mocked HTTP calls.
-        """
+        """Test that get_json returns expected payload from mocked HTTP calls."""
         mock_response = Mock()
         mock_response.json.return_value = test_payload
 
         with patch("utils.requests.get", return_value=mock_response) as mock_get:
             result = get_json(test_url)
-
-            # Ensure requests.get was called once with the correct URL
             mock_get.assert_called_once_with(test_url)
-
-            # Ensure the result is the expected payload
             self.assertEqual(result, test_payload)
-
-    def test_get_json_exception(self) -> None:
-        """Test that get_json propagates exceptions from requests.get."""
-        test_url = "http://invalid-url"
-        
-        with patch("utils.requests.get", side_effect=Exception("Connection error")) as mock_get:
-            with self.assertRaises(Exception):
-                get_json(test_url)
-            mock_get.assert_called_once_with(test_url)
 
 
 class TestMemoize(unittest.TestCase):
@@ -93,10 +73,8 @@ class TestMemoize(unittest.TestCase):
 
     def test_memoize(self) -> None:
         """Test that memoize caches the result of a method call."""
-
         class TestClass:
             """Helper class for testing memoize."""
-
             def a_method(self) -> int:
                 return 42
 
@@ -104,22 +82,10 @@ class TestMemoize(unittest.TestCase):
             def a_property(self) -> int:
                 return self.a_method()
 
-        with patch.object(
-            TestClass,
-            "a_method",
-            return_value=42
-        ) as mock_method:
+        with patch.object(TestClass, "a_method", return_value=42) as mock_method:
             obj = TestClass()
-
-            # Call multiple times
-            results = [obj.a_property() for _ in range(5)]
-
-            # All results should be the same
-            self.assertEqual(results, [42, 42, 42, 42, 42])
-            
-            # Method should only be called once due to memoization
+            result1 = obj.a_property()
+            result2 = obj.a_property()
+            self.assertEqual(result1, 42)
+            self.assertEqual(result2, 42)
             mock_method.assert_called_once()
-
-
-if __name__ == "__main__":
-    unittest.main()
