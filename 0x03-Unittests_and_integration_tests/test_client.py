@@ -66,13 +66,15 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(GithubOrgClient.has_license(repo, license_key), expected)
 
 
-@parameterized_class([  # type: ignore[misc]
-    {
-        "org_payload": org_payload,
-        "repos_payload": repos_payload,
-        "expected_repos": expected_repos,
-        "apache2_repos": apache2_repos,
-    }
+@parameterized_class((
+    "org_payload", "repos_payload", "expected_repos", "apache2_repos"
+), [
+    (
+        org_payload,
+        repos_payload,
+        expected_repos,
+        apache2_repos,
+    ),
 ])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient.public_repos with fixtures."""
@@ -113,6 +115,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             client.public_repos(license="apache-2.0"),
             self.apache2_repos
         )
+
 
 
 if __name__ == "__main__":
