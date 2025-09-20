@@ -98,9 +98,9 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
         def side_effect(url: str):
             mock_response = unittest.mock.Mock()
-            if url == "https://api.github.com/orgs/google":
+            if url.endswith("/orgs/google"):
                 mock_response.json.return_value = cls.org_payload
-            elif url == "https://api.github.com/orgs/google/repos":
+            elif url.endswith("/orgs/google/repos"):
                 mock_response.json.return_value = cls.repos_payload
             else:
                 mock_response.json.return_value = {}
