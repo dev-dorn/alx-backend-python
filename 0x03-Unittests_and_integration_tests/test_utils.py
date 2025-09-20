@@ -44,27 +44,28 @@ class TestAccessNestedMap(unittest.TestCase):
 
 class TestGetJson(unittest.TestCase):
     """Unit test for the get_json function (Task 2)."""
-
-    @parameterized.expand([ #type: ignore[misc]
+    @parameterized.expand([  # type: ignore[misc]
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
+
     def test_get_json(self, test_url: str, test_payload: Dict[str, Any]) -> None:
-            """Test that get_json returns expected payload from mocked HTTP Calls"""
-            mock_response: Mock = Mock()
-            mock_response.json.return_value = test_payload
+        """Test that get_json returns expected payload from mocked HTTP Calls."""
+        mock_response: Mock = Mock()
+        mock_response.json.return_value = test_payload
 
-            with patch("utils.requests.get", return_value= mock_response) as mock_get:
-                 result = get_json(test_url)
+        with patch("utils.requests.get", return_value=mock_response) as mock_get:
+            result = get_json(test_url)
 
-                 #Ensure requests.get was called once with the correct URL
-                 mock_get.assert_called_once_with(test_url)
+            # Ensure requests.get was called once with the correct URL
+            mock_get.assert_called_once_with(test_url)
 
-                 #Ensure the results is the expected payload
-                 self.assertEqual(result, test_payload)
+            # Ensure the result is the expected payload
+            self.assertEqual(result, test_payload)
 
 class TestMemoize(unittest.TestCase):
     """Unit tests for the memoize decorator."""
+
 
     def test_memoize(self) -> None:
         """
@@ -97,6 +98,7 @@ class TestMemoize(unittest.TestCase):
 
             # Ensure a_method is only called once due to memoization
             mock_method.assert_called_once()
+
 
 
 if __name__ == "__main__":
