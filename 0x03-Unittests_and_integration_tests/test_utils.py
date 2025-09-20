@@ -39,10 +39,9 @@ class TestAccessNestedMap(unittest.TestCase):
         nested_map: Dict[str, Any],
         path: Tuple[str, ...]
     ) -> None:
-        """Test that access_nested_map raises KeyError with correct message."""
+        """Test that access_nested_map raises KeyError."""
         with self.assertRaises(KeyError) as error:
             access_nested_map(nested_map, path)
-
         self.assertEqual(str(error.exception), repr(path[-1]))
 
 
@@ -58,7 +57,7 @@ class TestGetJson(unittest.TestCase):
         test_url: str,
         test_payload: Dict[str, Any]
     ) -> None:
-        """Test that get_json returns expected payload from mocked HTTP calls."""
+        """Test get_json returns expected payload from mocked HTTP calls."""
         mock_response = Mock()
         mock_response.json.return_value = test_payload
 
@@ -73,28 +72,19 @@ class TestMemoize(unittest.TestCase):
 
     def test_memoize(self) -> None:
         """Test that memoize caches the result of a method call."""
-        
         class TestClass:
             """Test class for memoize testing."""
-            
             def a_method(self):
                 return 42
 
             @memoize
             def a_property(self):
                 return self.a_method()
-        
-        # Mock the a_method to track calls
+
         with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
             test_instance = TestClass()
-            
-            # Call a_property twice
             result1 = test_instance.a_property()
             result2 = test_instance.a_property()
-            
-            # Verify correct results are returned
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
-            
-            # Verify a_method was called only once due to memoization
             mock_method.assert_called_once()
