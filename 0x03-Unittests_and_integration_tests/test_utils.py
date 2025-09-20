@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Unit tests for utils.access_nested_map, get_json, and memoize.
+Unit tests for utils functions:
+- access_nested_map
+- get_json
+- memoize
 """
 
 import unittest
@@ -40,14 +43,11 @@ class TestAccessNestedMap(unittest.TestCase):
         with self.assertRaises(KeyError) as error:
             access_nested_map(nested_map, path)
 
-        self.assertEqual(
-            str(error.exception),
-            repr(path[-1])
-        )
+        self.assertEqual(str(error.exception), repr(path[-1]))
 
 
 class TestGetJson(unittest.TestCase):
-    """Unit test for the get_json function (Task 2)."""
+    """Unit tests for the get_json function."""
 
     @parameterized.expand([  # type: ignore[misc]
         ("http://example.com", {"payload": True}),
@@ -58,14 +58,14 @@ class TestGetJson(unittest.TestCase):
         test_url: str,
         test_payload: Dict[str, Any]
     ) -> None:
-        """Test that get_json returns expected payload from mocked HTTP calls"""
+        """
+        Test that get_json returns expected payload
+        from mocked HTTP calls.
+        """
         mock_response: Mock = Mock()
         mock_response.json.return_value = test_payload
 
-        with patch(
-            "utils.requests.get",
-            return_value=mock_response
-        ) as mock_get:
+        with patch("utils.requests.get", return_value=mock_response) as mock_get:
             result = get_json(test_url)
 
             # Ensure requests.get was called once with the correct URL
@@ -76,12 +76,14 @@ class TestGetJson(unittest.TestCase):
 
 
 class TestMemoize(unittest.TestCase):
-    """Unit test for the memoize decorator (Task 3)."""
+    """Unit tests for the memoize decorator."""
 
     def test_memoize(self) -> None:
         """Test that memoize caches the result of a method call."""
 
         class TestClass:
+            """Helper class for testing memoize."""
+
             def a_method(self) -> int:
                 return 42
 
@@ -94,17 +96,14 @@ class TestMemoize(unittest.TestCase):
             "a_method",
             return_value=42
         ) as mock_method:
-            test_obj = TestClass()
+            obj = TestClass()
 
-            # Call a_property twice
-            result1 = test_obj.a_property()
-            result2 = test_obj.a_property()
+            # Call twice
+            result1 = obj.a_property()
+            result2 = obj.a_property()
 
-            # Both results should be the same
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
-
-            # a_method should only be called once (cached result)
             mock_method.assert_called_once()
 
 
