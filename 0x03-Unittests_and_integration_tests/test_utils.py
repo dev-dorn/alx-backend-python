@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch, Mock
 from typing import Any, Dict, Tuple
 from parameterized import parameterized  # type: ignore
-from utils import access_nested_map, get_json
+from utils import access_nested_map, get_json, memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -68,6 +68,40 @@ class TestGetJson(unittest.TestCase):
 
             # Ensure the result matches the expected payload
             self.assertEqual(result, test_payload)
+class TestMemoize(unittest.TestCase):
+    """Unit tests for the memoize decorator."""
+
+    def test_memoize(self) -> None:
+        """
+        Test that memoize caches the result of a method so that
+        it is only executed once even if accessed multiple times.
+        """
+
+        class TestClass:
+            """A sample class to test memoization."""
+
+            def a_method(self) -> int:
+                """Return a constant value for testing."""
+                return 42
+
+            @memoize
+            def a_property(self) -> int:
+                """A memoized property depending on a_method."""
+                return self.a_method()
+
+        with patch.object(TestClass, "a_method", return_value=42) as mock_method:
+            obj = TestClass()
+
+            # Call the memoized property twice
+            result1 = obj.a_property
+            result2 = obj.a_property
+
+            # Ensure both results are correct
+            self.assertEqual(result1, 42)
+            self.assertEqual(result2, 42)
+
+            # Ensure a_method is only called once due to memoization
+            mock_method.assert_called_once()
 
 
 if __name__ == "__main__":
