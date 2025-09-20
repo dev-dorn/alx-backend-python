@@ -5,7 +5,7 @@ Unit and integration tests for client.GithubOrgClient.
 
 import unittest
 from unittest.mock import patch, PropertyMock
-from parameterized import parameterized, parameterized_class  # type: ignore
+from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
 from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
 
@@ -13,7 +13,7 @@ from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
 class TestGithubOrgClient(unittest.TestCase):
     """Unit tests for the GithubOrgClient class."""
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([
         ("google",),
         ("abc",),
     ])
@@ -57,7 +57,7 @@ class TestGithubOrgClient(unittest.TestCase):
             mock_repos_url.assert_called_once()
             mock_get_json.assert_called_once()
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
@@ -82,11 +82,10 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Start patcher for requests.get with side_effect returning fixtures."""
-        cls.get_patcher = patch("requests.get")  # keep patcher object
-        mock_get = cls.get_patcher.start()       # start patcher
+        cls.get_patcher = patch("requests.get")
+        mock_get = cls.get_patcher.start()
 
         def side_effect(url: str):
-            """Return mock responses depending on requested URL."""
             mock_response = unittest.mock.Mock()
             if url == "https://api.github.com/orgs/google":
                 mock_response.json.return_value = cls.org_payload
@@ -115,7 +114,6 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             client.public_repos(license="apache-2.0"),
             self.apache2_repos
         )
-
 
 
 if __name__ == "__main__":
