@@ -80,8 +80,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Start patcher for requests.get with side_effect returning fixtures."""
-        cls.get_patcher = patch("requests.get")
-        mock_get = cls.get_patcher.start()
+        cls.get_patcher = patch("requests.get")  # keep patcher object
+        mock_get = cls.get_patcher.start()       # start patcher
 
         def side_effect(url: str):
             """Return mock responses depending on requested URL."""
@@ -110,7 +110,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """Integration test for filtering repos by license key."""
         client = GithubOrgClient("google")
         self.assertEqual(
-            client.public_repos(license="apache-2.0"), self.apache2_repos
+            client.public_repos(license="apache-2.0"),
+            self.apache2_repos
         )
 
 
