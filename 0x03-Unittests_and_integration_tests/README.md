@@ -14,5 +14,20 @@ All code and tests follow the ALX requirements:
 
 ---
 
-## Directory Structure
+---
+
+## Task 1: Parameterize a unit test
+We implemented parameterized unit tests for the function `utils.access_nested_map`.  
+This function retrieves a value from a nested dictionary using a given tuple path.  
+
+### Example Behavior
+```python
+>>> access_nested_map({"a": 1}, ("a",))
+1
+>>> access_nested_map({"a": {"b": 2}}, ("a",))
+{"b": 2}
+>>> access_nested_map({"a": {"b": 2}}, ("a", "b"))
+2
+
+
 
