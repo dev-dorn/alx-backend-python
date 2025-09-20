@@ -42,38 +42,35 @@ class TestAccessNestedMap(unittest.TestCase):
 
         self.assertEqual(str(error.exception), repr(path[-1]))
 
-
 class TestGetJson(unittest.TestCase):
     """Unit test for the get_json function (Task 2)."""
 
-    @parameterized.expand([  # type: ignore[misc]
+    @parameterized.expand([ #type: ignore[misc]
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
-    def test_get_json(
-        self,
-        test_url: str,
-        test_payload: Dict[str, Any]
-    ) -> None:
-        """Test get_json returns expected payload from mocked HTTP Calls."""
-        mock_response: Mock = Mock()
-        mock_response.json.return_value = test_payload
+    def test_get_json(self, test_url: str, test_payload: Dict[str, Any]) -> None:
+            """Test that get_json returns expected payload from mocked HTTP Calls"""
+            mock_response: Mock = Mock()
+            mock_response.json.return_value = test_payload
 
-        with patch("utils.requests.get", return_value=mock_response) as mock_get:
-            result = get_json(test_url)
+            with patch("utils.requests.get", return_value= mock_response) as mock_get:
+                 result = get_json(test_url)
 
-            # Ensure requests.get was called once with the correct URL
-            mock_get.assert_called_once_with(test_url)
+                 #Ensure requests.get was called once with the correct URL
+                 mock_get.assert_called_once_with(test_url)
 
-            # Ensure the results is the expected payload
-            self.assertEqual(result, test_payload)
-
+                 #Ensure the results is the expected payload
+                 self.assertEqual(result, test_payload)
 
 class TestMemoize(unittest.TestCase):
     """Unit tests for the memoize decorator."""
 
     def test_memoize(self) -> None:
-        """Test memoize caches method result so it executes only once."""
+        """
+        Test that memoize caches the result of a method so that
+        it is only executed once even if accessed multiple times.
+        """
 
         class TestClass:
             """A sample class to test memoization."""
@@ -91,8 +88,8 @@ class TestMemoize(unittest.TestCase):
             obj = TestClass()
 
             # Call the memoized property twice
-            result1 = obj.a_property()
-            result2 = obj.a_property()
+            result1 = obj.a_property
+            result2 = obj.a_property
 
             # Ensure both results are correct
             self.assertEqual(result1, 42)
