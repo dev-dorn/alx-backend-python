@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Unit tests for utils.access_nested_map using parameterized inputs.
+Unit tests for utils.access_nested_map and utils.get_json.
+Covers dictionary path access and mocked HTTP JSON retrieval.
 """
 
 import unittest
@@ -24,45 +25,49 @@ class TestAccessNestedMap(unittest.TestCase):
         path: Tuple[str, ...],
         expected: Any
     ) -> None:
-        """Test that access_nested_map returns expected results."""
+        """
+        Test that access_nested_map returns expected results
+        for valid dictionary paths.
+        """
         self.assertEqual(access_nested_map(nested_map, path), expected)
 
-    @parameterized.expand([  # type: ignore[misc]
-        ({}, ("a",)),
-        ({"a": 1}, ("a", "b")),
-    ])
-    def test_access_nested_map_exception(
-        self,
-        nested_map: Dict[str, Any],
-        path: Tuple[str, ...]
-    ) -> None:
-        """Test that access_nested_map raises KeyError with correct message."""
+    def test_access_nested_map_exception(self) -> None:
+        """
+        Test that access_nested_map raises KeyError with the correct message
+        when the path does not exist in the nested map.
+        """
         with self.assertRaises(KeyError) as error:
-            access_nested_map(nested_map, path)
+            access_nested_map({}, ("a",))
+        self.assertEqual(str(error.exception), repr("a"))
 
-        self.assertEqual(str(error.exception), repr(path[-1]))
+        with self.assertRaises(KeyError) as error:
+            access_nested_map({"a": 1}, ("a", "b"))
+        self.assertEqual(str(error.exception), repr("b"))
+
 
 class TestGetJson(unittest.TestCase):
-    """Unit test for the get_json function (Task 2)."""
+    """Unit tests for the get_json function."""
 
-    @parameterized.expand([ #type: ignore[misc]
+    @parameterized.expand([  # type: ignore[misc]
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
-    def test_get_json(self, test_url: str, test_payload: Dict[str: Any]) -> None:
-            """Test that get_json returns expected payload from mocked HTTP Calls"""
-            mock_response: Mock = Mock()
-            mock_response.json.return_value = test_payload
+    def test_get_json(self, test_url: str, test_payload: Dict[str, Any]) -> None:
+        """
+        Test that get_json returns the expected payload by mocking
+        external HTTP calls to requests.get.
+        """
+        mock_response: Mock = Mock()
+        mock_response.json.return_value = test_payload
 
-            with patch("utils.requests.get", return_value= mock_response) as mock_get:
-                 result = get_json(test_url)
+        with patch("utils.requests.get", return_value=mock_response) as mock_get:
+            result = get_json(test_url)
 
-                 #Ensure requests.get was called once with the correct URL
-                 mock_get.assert_called_once_with(test_url)
+            # Ensure requests.get was called once with the correct URL
+            mock_get.assert_called_once_with(test_url)
 
-                 #Ensure the results is the expected payload
-                 self.assertEqual(result, test_payload)
-
+            # Ensure the result matches the expected payload
+            self.assertEqual(result, test_payload)
 
 
 if __name__ == "__main__":
