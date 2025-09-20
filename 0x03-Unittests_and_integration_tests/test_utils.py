@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Unit tests for utils.access_nested_map and utils.get_json.
-Covers dictionary path access and mocked HTTP JSON retrieval.
+Unit tests for utils.access_nested_map, utils.get_json, and utils.memoize.
+Covers dictionary path access, mocked HTTP JSON retrieval, and memoization.
 """
 
 import unittest
@@ -52,7 +52,11 @@ class TestGetJson(unittest.TestCase):
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
-    def test_get_json(self, test_url: str, test_payload: Dict[str, Any]) -> None:
+    def test_get_json(
+        self,
+        test_url: str,
+        test_payload: Dict[str, Any]
+    ) -> None:
         """
         Test that get_json returns the expected payload by mocking
         external HTTP calls to requests.get.
@@ -60,7 +64,10 @@ class TestGetJson(unittest.TestCase):
         mock_response: Mock = Mock()
         mock_response.json.return_value = test_payload
 
-        with patch("utils.requests.get", return_value=mock_response) as mock_get:
+        with patch(
+            "utils.requests.get",
+            return_value=mock_response
+        ) as mock_get:
             result = get_json(test_url)
 
             # Ensure requests.get was called once with the correct URL
@@ -68,6 +75,8 @@ class TestGetJson(unittest.TestCase):
 
             # Ensure the result matches the expected payload
             self.assertEqual(result, test_payload)
+
+
 class TestMemoize(unittest.TestCase):
     """Unit tests for the memoize decorator."""
 
