@@ -33,7 +33,7 @@ class User(AbstractUser):
         ('admin', 'Admin'),
     ]
     
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # Changed from id to user_id
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
@@ -47,7 +47,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
     
-    objects = UserManager()  # Use the custom manager
+    objects = UserManager()
     
     # Add related_name to avoid clashes with default User model
     groups = models.ManyToManyField(
@@ -71,16 +71,16 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
 class Conversation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # Changed from id to conversation_id
     participants = models.ManyToManyField(User, related_name='conversations')
     created_at = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
         participant_names = ", ".join([str(user) for user in self.participants.all()[:2]])
-        return f"Conversation {self.id} - {participant_names}"
+        return f"Conversation {self.conversation_id} - {participant_names}"
 
 class Message(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # Changed from id to message_id
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     message_body = models.TextField()
