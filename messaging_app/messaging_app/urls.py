@@ -1,14 +1,8 @@
-# chats/urls.py
+# messaging_app/urls.py
+from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, ConversationViewSet, MessageViewSet
-
-# Create router and register viewsets
-router = DefaultRouter()  # Added DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'conversations', ConversationViewSet)
-router.register(r'messages', MessageViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('admin/', admin.site.urls),
+    path('api/', include('chats.urls')),  # This line contains api/
 ]
