@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/home/don/alx projects/messaging_app/venv/bin/python3" "$0" "$@"
+'''exec' "/home/don/alx projects/alx-backend-python/messaging_app/venv/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re
