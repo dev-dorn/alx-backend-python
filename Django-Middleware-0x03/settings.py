@@ -37,7 +37,7 @@ MIDDLEWARE = [
     'chats.middleware.RequestLoggingMiddleware',
     'chats.middleware.RestrictAccessByTimeMiddleware', 
     'chats.middleware.OffensiveLanguageMiddleware',  # Changed from RateLimitMiddleware
-    'chats.middleware.RolePermissionMiddleware',
+    'chats.middleware.RolepermissionMiddleware',
 ]
 
 
