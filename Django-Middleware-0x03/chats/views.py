@@ -1,6 +1,8 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Conversation, Message
@@ -101,3 +103,12 @@ class MessageViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
+
+def chat_home(request):
+    return JsonResponse({'message': 'Chat home page'})
+
+@csrf_exempt
+def send_message(request):
+    if request.method == 'POST':
+        return JsonResponse({'status': 'Message sent'})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
