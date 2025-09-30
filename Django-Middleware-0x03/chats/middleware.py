@@ -1,5 +1,3 @@
-             
-                
 from datetime import datetime, time
 from django.http import HttpResponseForbidden, JsonResponse
 from django.core.cache import cache
@@ -96,57 +94,135 @@ class RestrictAccessByTimeMiddleware:
         return response
 
 
-class RateLimitMiddleware:
+class OffensiveLanguageMiddleware:
     """
-    Middleware to limit chat messages to 5 per minute per IP
+    Middleware to detect and block offensive language in messages
+    and implement rate limiting (5 messages per minute per IP)
     """
     
     def __init__(self, get_response):
         self.get_response = get_response
+        # List of offensive words to block
+        self.offensive_words = [
+            'badword1', 'badword2', 'offensive', 'inappropriate',
+            'spam', 'harassment', 'abuse'
+        ]
+        # Rate limiting settings
         self.rate_limit = 5  # 5 messages
         self.time_window = 60  # 1 minute in seconds
 
     def __call__(self, request):
-        # Only apply to POST requests (sending messages)
+        # Check for offensive language in POST requests
         if request.method == 'POST' and any(path in request.path for path in ['/chat/', '/messages/']):
-            # Get client IP address
-            ip = self.get_client_ip(request)
-            cache_key = f"rate_limit_{ip}"
             
-            # Get current count from cache
-            current_data = cache.get(cache_key, {'count': 0, 'first_request': None})
+            # Check for offensive language in request data
+            offensive_found = self.check_offensive_language(request)
+            if offensive_found:
+                return JsonResponse({
+                    'error': 'Your message contains inappropriate language. Please revise your message.'
+                }, status=400)
             
-            if current_data['first_request'] is None:
-                # First request from this IP
+            # Apply rate limiting
+            rate_limit_result = self.apply_rate_limiting(request)
+            if rate_limit_result:
+                return rate_limit_result
+        
+        response = self.get_response(request)
+        return response
+
+    def check_offensive_language(self, request):
+        """
+        Check request data for offensive language
+        """
+        # Check POST data
+        for key, value in request.POST.items():
+            if isinstance(value, str) and self.contains_offensive_language(value):
+                return True
+        
+        # Check JSON data
+        if hasattr(request, 'data'):  # For DRF requests
+            for key, value in request.data.items():
+                if isinstance(value, str) and self.contains_offensive_language(value):
+                    return True
+        
+        # Check raw body for JSON
+        if request.content_type == 'application/json' and request.body:
+            try:
+                import json
+                data = json.loads(request.body)
+                if self.search_dict_for_offensive_language(data):
+                    return True
+            except json.JSONDecodeError:
+                pass
+        
+        return False
+
+    def contains_offensive_language(self, text):
+        """
+        Check if text contains offensive language
+        """
+        text_lower = text.lower()
+        for word in self.offensive_words:
+            if word in text_lower:
+                return True
+        return False
+
+    def search_dict_for_offensive_language(self, data):
+        """
+        Recursively search dictionary for offensive language
+        """
+        if isinstance(data, dict):
+            for value in data.values():
+                if self.search_dict_for_offensive_language(value):
+                    return True
+        elif isinstance(data, list):
+            for item in data:
+                if self.search_dict_for_offensive_language(item):
+                    return True
+        elif isinstance(data, str):
+            return self.contains_offensive_language(data)
+        return False
+
+    def apply_rate_limiting(self, request):
+        """
+        Apply rate limiting - 5 messages per minute per IP
+        """
+        # Get client IP address
+        ip = self.get_client_ip(request)
+        cache_key = f"rate_limit_{ip}"
+        
+        # Get current count from cache
+        current_data = cache.get(cache_key, {'count': 0, 'first_request': None})
+        
+        if current_data['first_request'] is None:
+            # First request from this IP
+            current_data = {
+                'count': 1,
+                'first_request': datetime.now()
+            }
+        else:
+            # Check if still within time window
+            time_diff = (datetime.now() - current_data['first_request']).total_seconds()
+            
+            if time_diff < self.time_window:
+                # Within time window, increment count
+                current_data['count'] += 1
+            else:
+                # Time window expired, reset
                 current_data = {
                     'count': 1,
                     'first_request': datetime.now()
                 }
-            else:
-                # Check if still within time window
-                time_diff = (datetime.now() - current_data['first_request']).total_seconds()
-                
-                if time_diff < self.time_window:
-                    # Within time window, increment count
-                    current_data['count'] += 1
-                else:
-                    # Time window expired, reset
-                    current_data = {
-                        'count': 1,
-                        'first_request': datetime.now()
-                    }
-            
-            # Check if rate limit exceeded
-            if current_data['count'] > self.rate_limit:
-                return JsonResponse({
-                    'error': f'Rate limit exceeded. Maximum {self.rate_limit} messages per minute.'
-                }, status=429)
-            
-            # Update cache
-            cache.set(cache_key, current_data, self.time_window)
         
-        response = self.get_response(request)
-        return response
+        # Check if rate limit exceeded
+        if current_data['count'] > self.rate_limit:
+            return JsonResponse({
+                'error': f'Rate limit exceeded. Maximum {self.rate_limit} messages per minute.'
+            }, status=429)
+        
+        # Update cache
+        cache.set(cache_key, current_data, self.time_window)
+        return None
 
     def get_client_ip(self, request):
         """
@@ -160,9 +236,10 @@ class RateLimitMiddleware:
         return ip
 
 
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     """
-    Middleware to check user roles for specific actions
+    Middleware to check user's role before allowing access to specific actions
+    If the user is not admin or moderator, it should return error 403
     """
     
     def __init__(self, get_response):
@@ -182,7 +259,7 @@ class RolePermissionMiddleware:
                 if not request.user.is_authenticated:
                     return HttpResponseForbidden("Authentication required.")
                 
-                # Check if user has required role
+                # Check if user has required role (admin or moderator)
                 if not self.user_has_required_role(request.user, required_roles):
                     return HttpResponseForbidden(
                         "You don't have permission to access this resource."
@@ -194,7 +271,7 @@ class RolePermissionMiddleware:
 
     def user_has_required_role(self, user, required_roles):
         """
-        Check if user has any of the required roles
+        Check if user has any of the required roles (admin or moderator)
         """
         user_roles = []
         
@@ -202,10 +279,15 @@ class RolePermissionMiddleware:
         if user.is_superuser or user.is_staff:
             user_roles.append('admin')
         
-        # Check for moderator role (you might need to customize this)
-        # This assumes you have a user profile with role field
+        # Check for moderator role
+        # This is a simple implementation - you might need to adjust based on your user model
         if hasattr(user, 'profile') and hasattr(user.profile, 'role'):
-            user_roles.append(user.profile.role)
+            if user.profile.role in ['moderator', 'admin']:
+                user_roles.append(user.profile.role)
+        
+        # For this task, we'll also consider users with specific permissions as moderators
+        if user.has_perm('chats.moderator') or user.has_perm('auth.moderator'):
+            user_roles.append('moderator')
         
         # Check if user has any of the required roles
         return any(role in user_roles for role in required_roles)
