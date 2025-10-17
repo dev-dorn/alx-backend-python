@@ -1,0 +1,9 @@
+HTTP 401 Unauthorized
+Allow: POST, OPTIONS
+Content-Type: application/json
+Vary: Accept
+WWW-Authenticate: Bearer realm="api"
+
+{
+    "detail": "No active account found with the given credentials"
+}
