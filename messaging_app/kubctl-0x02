@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# kubctl-0x02: Blue-Green deployment script
+set -e
+
+# Apply blue deployment (current version)
+echo "Applying Blue Deployment..."
+kubectl apply -f blue_deployment.yaml
+
+# Apply green deployment (new version)
+echo "Applying Green Deployment..."
+kubectl apply -f green_deployment.yaml
+
+# Apply service pointing initially to blue deployment
+echo "Applying Service pointing to blue deployment..."
+kubectl apply -f kubeservice.yaml
+
+# Wait for pods to be ready
+echo "Waiting for pods to be ready..."
+kubectl wait --for=condition=ready pod -l app=messaging-app --timeout=120s
+
+# Check logs for green deployment pods
+echo "Checking logs for green deployment pods..."
+GREEN_PODS=$(kubectl get pods -l version=green -o jsonpath='{.items[*].metadata.name}')
+for pod in $GREEN_PODS; do
+  echo "Logs for pod $pod:"
+  kubectl logs $pod
+  echo "--------------------------"
+done
+
+echo "Blue-Green deployment applied successfully."
+
