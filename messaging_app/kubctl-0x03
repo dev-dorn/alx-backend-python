@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# kubctl-0x03: Rolling update script for blue deployment
+set -e
+DEPLOYMENT_NAME="messaging-app-blue"
+NAMESPACE="default"
+SERVICE_URL="http://messaging-app-service:8000/"
+
+# Apply updated deployment to trigger rolling update
+echo "Applying updated deployment (image version 2.0)..."
+kubectl apply -f blue_deployment.yaml
+
+# Monitor rolling update progress
+echo "Monitoring rollout status..."
+kubectl rollout status deployment/$DEPLOYMENT_NAME --namespace=$NAMESPACE
+
+# Test for downtime using curl (10 requests, 1 per second)
+echo "Testing application for downtime..."
+for i in {1..10}; do
+  STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" $SERVICE_URL || echo "000")
+  echo "Request $i returned status: $STATUS_CODE"
+  sleep 1
+ done
+
+# Verify pods after rolling update
+echo "Current pods after rolling update:"
+kubectl get pods -l app=messaging-app,version=blue --namespace=$NAMESPACE
+
+echo "Rolling update complete."
+
