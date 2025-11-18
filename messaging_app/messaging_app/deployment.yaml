@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: messaging-app-deploymgient
+  name: messaging-app-deployment
   labels:
     app: messaging-app
 spec:
