@@ -1,13 +1,12 @@
 pipeline {
     agent {
         docker {
-            image 'python:3.11'   // Use Python 3.11 Docker image
-            args '-u root:root'   // Run as root to install packages
+            image 'python:3.11'
+            args '-u root:root'
         }
     }
 
     environment {
-        // Use the GitHub App credentials you created in Jenkins
         GITHUB_CREDS = 'jenkins-ci-app-messagging-app'
     }
 
@@ -23,10 +22,10 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    python -m venv venv
+                    python3 -m venv venv
                     . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip3 install --upgrade pip
+                    pip3 install -r messaging_app/requirements.txt
                 '''
             }
         }
@@ -35,8 +34,9 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    pytest --junitxml=reports/pytest-results.xml \
-                           --html=reports/pytest-report.html --self-contained-html
+                    pytest messaging_app/tests \
+                        --junitxml=reports/pytest-results.xml \
+                        --html=reports/pytest-report.html --self-contained-html
                 '''
             }
         }
