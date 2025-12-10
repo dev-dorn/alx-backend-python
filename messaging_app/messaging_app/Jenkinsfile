@@ -2,12 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // GitHub App credential ID you created in Jenkins
-        GITHUB_CREDS = 'jenkins-ci-app-messagging-app'
-        // Docker Hub credential ID you created in Jenkins
-        DOCKERHUB_CREDS = 'dockerhub-creds'
-        // Replace with your Docker Hub repo name
-        DOCKER_IMAGE = 'your-dockerhub-username/messaging-app'
+        GITHUB_CREDS = 'jenkins-ci-app-messaging-app'
+        DOCKERHUB_CREDS = '64ecb87a-6ce1-4f65-ae13-45de70137c17'  // Use this ID from your Jenkins credentials
+        DOCKER_IMAGE = 'dorndev/messaging-app'  // Replace with your actual Docker Hub repo name
     }
 
     stages {
