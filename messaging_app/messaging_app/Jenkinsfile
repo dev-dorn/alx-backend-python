@@ -1,13 +1,13 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11'
-            args '-u root:root'
-        }
-    }
+    agent any
 
     environment {
+        // GitHub App credential ID you created in Jenkins
         GITHUB_CREDS = 'jenkins-ci-app-messagging-app'
+        // Docker Hub credential ID you created in Jenkins
+        DOCKERHUB_CREDS = 'dockerhub-creds'
+        // Replace with your Docker Hub repo name
+        DOCKER_IMAGE = 'your-dockerhub-username/messaging-app'
     }
 
     stages {
@@ -49,6 +49,29 @@ pipeline {
                     reportFiles: 'pytest-report.html',
                     reportName: 'Pytest Report'
                 ])
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f messaging_app/Dockerfile .
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDS}",
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                        docker push ${DOCKER_IMAGE}:latest
+                    '''
+                }
             }
         }
     }
