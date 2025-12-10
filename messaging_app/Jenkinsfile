@@ -1,0 +1,61 @@
+pipeline {
+    agent {
+        docker {
+            image 'python:3.11'   // Use Python 3.11 Docker image
+            args '-u root:root'   // Run as root to install packages
+        }
+    }
+
+    environment {
+        // Use the GitHub App credentials you created in Jenkins
+        GITHUB_CREDS = 'jenkins-ci-app-messagging-app'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/alx-backend-python/messaging_app.git',
+                    credentialsId: "${GITHUB_CREDS}"
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    python -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    pytest --junitxml=reports/pytest-results.xml \
+                           --html=reports/pytest-report.html --self-contained-html
+                '''
+            }
+        }
+
+        stage('Publish Report') {
+            steps {
+                junit 'reports/pytest-results.xml'
+                publishHTML(target: [
+                    reportDir: 'reports',
+                    reportFiles: 'pytest-report.html',
+                    reportName: 'Pytest Report'
+                ])
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'reports/*.xml, reports/*.html', fingerprint: true
+        }
+    }
+}
