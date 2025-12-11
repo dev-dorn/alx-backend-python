@@ -1,9 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim' // Use a Python image for the build step
+            args '-u root'
+        }
 
     environment {
-        GITHUB_CREDS = 'jenkins-ci-app-messaging-app'
-        DOCKERHUB_CREDS = '64ecb87a-6ce1-4f65-ae13-45de70137c17'  // Use this ID from your Jenkins credentials
+        GITHUB_CREDS = 'jenkins-ci-app-messagging-app'
+        DOCKERHUB_CREDS = 'Docker'  // Use this ID from your Jenkins credentials
         DOCKER_IMAGE = 'dorndev/messaging-app'  // Replace with your actual Docker Hub repo name
     }
 
@@ -11,7 +15,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/alx-backend-python/messaging_app.git',
+                    url: 'https://github.com/alx-backend-python.git',
                     credentialsId: "${GITHUB_CREDS}"
             }
         }
